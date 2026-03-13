@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grimper — Rock Climbing France</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --stone: #E8E0D4;
+    --chalk: #F5F1EB;
+    --granite: #2A2520;
+    --iron: #4A3F38;
+    --rust: #C4622D;
+    --moss: #5C7A4E;
+    --sky: #6B9EC7;
+    --sand: #D4B896;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--granite);
+    color: var(--stone);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  header {
+    padding: 2rem 3rem 1rem;
+    display: flex;
+    align-items: baseline;
+    gap: 1.5rem;
+    border-bottom: 1px solid rgba(232,224,212,0.1);
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3.5rem;
+    letter-spacing: 0.05em;
+    color: var(--rust);
+    line-height: 1;
+  }
+
+  .logo-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--sand);
+    opacity: 0.7;
+  }
+
+  .header-right {
+    margin-left: auto;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--sand);
+    opacity: 0.5;
+    letter-spacing: 0.15em;
+  }
+
+  .main-layout {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    min-height: calc(100vh - 90px);
+  }
+
+  /* FILTERS PANEL */
+  .filters-panel {
+    border-right: 1px solid rgba(232,224,212,0.1);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    background: rgba(0,0,0,0.15);
+  }
+
+  .filter-section-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .filter-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(196,98,45,0.3);
+  }
+
+  /* City proximity */
+  .city-search {
+    position: relative;
+  }
+
+  .city-search input {
+    width: 100%;
+    background: rgba(232,224,212,0.06);
+    border: 1px solid rgba(232,224,212,0.15);
+    border-radius: 4px;
+    padding: 0.7rem 1rem;
+    color: var(--stone);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .city-search input:focus {
+    border-color: var(--rust);
+  }
+
+  .city-search input::placeholder { opacity: 0.4; }
+
+  .city-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+  }
+
+  .city-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid rgba(232,224,212,0.2);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.05em;
+  }
+
+  .city-tag:hover { border-color: var(--rust); color: var(--rust); }
+  .city-tag.active { background: var(--rust); border-color: var(--rust); color: white; }
+
+  /* Range sliders */
+  .range-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .range-item label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--stone);
+    margin-bottom: 0.5rem;
+    opacity: 0.8;
+  }
+
+  .range-item label span {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--rust);
+  }
+
+  input[type="range"] {
+    width: 100%;
+    appearance: none;
+    height: 3px;
+    background: rgba(232,224,212,0.15);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--rust);
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+
+  /* Toggle filters */
+  .toggle-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .toggle-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(232,224,212,0.06);
+  }
+
+  .toggle-label {
+    font-size: 0.82rem;
+    opacity: 0.8;
+  }
+
+  .toggle-switch {
+    width: 34px;
+    height: 18px;
+    background: rgba(232,224,212,0.1);
+    border-radius: 9px;
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+
+  .toggle-switch::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--stone);
+    top: 3px;
+    left: 3px;
+    transition: transform 0.2s, background 0.2s;
+    opacity: 0.4;
+  }
+
+  .toggle-item.active .toggle-switch { background: var(--rust); }
+  .toggle-item.active .toggle-switch::after { transform: translateX(16px); opacity: 1; }
+
+  /* Grade selector */
+  .grade-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.4rem;
+  }
+
+  .grade-btn {
+    padding: 0.4rem 0;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    border: 1px solid rgba(232,224,212,0.15);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: transparent;
+    color: var(--stone);
+    opacity: 0.6;
+  }
+
+  .grade-btn:hover { opacity: 1; border-color: var(--sky); }
+  .grade-btn.active { background: var(--sky); border-color: var(--sky); color: white; opacity: 1; }
+
+  .apply-btn {
+    margin-top: auto;
+    padding: 0.9rem;
+    background: var(--rust);
+    border: none;
+    border-radius: 4px;
+    color: white;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .apply-btn:hover { background: #d4713a; transform: translateY(-1px); }
+
+  /* RESULTS PANEL */
+  .results-panel {
+    padding: 2rem 2.5rem;
+    overflow-y: auto;
+  }
+
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+
+  .results-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    opacity: 0.5;
+    text-transform: uppercase;
+  }
+
+  .sort-select {
+    background: transparent;
+    border: 1px solid rgba(232,224,212,0.15);
+    color: var(--stone);
+    padding: 0.4rem 0.8rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    border-radius: 3px;
+    cursor: pointer;
+    outline: none;
+    letter-spacing: 0.05em;
+  }
+
+  .sort-select option { background: var(--granite); }
+
+  /* Climbing cards */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .climbing-card {
+    background: rgba(232,224,212,0.04);
+    border: 1px solid rgba(232,224,212,0.1);
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.25s;
+    animation: fadeIn 0.4s ease forwards;
+    opacity: 0;
+  }
+
+  .climbing-card:hover {
+    border-color: rgba(196,98,45,0.5);
+    transform: translateY(-3px);
+    background: rgba(232,224,212,0.07);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-header {
+    padding: 1.25rem 1.25rem 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .card-region {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--rust);
+    opacity: 0.8;
+  }
+
+  .card-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+    color: var(--chalk);
+    margin-top: 0.2rem;
+  }
+
+  .card-grade-badge {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    padding: 0.2rem 0.6rem;
+    border: 1px solid;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+  }
+
+  .grade-easy { color: var(--moss); border-color: var(--moss); }
+  .grade-moderate { color: var(--sky); border-color: var(--sky); }
+  .grade-hard { color: var(--rust); border-color: var(--rust); }
+
+  .card-rock-type {
+    padding: 0 1.25rem;
+    font-size: 0.75rem;
+    opacity: 0.45;
+    font-style: italic;
+  }
+
+  .card-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    margin-top: 1rem;
+    border-top: 1px solid rgba(232,224,212,0.08);
+    background: rgba(232,224,212,0.08);
+  }
+
+  .stat {
+    background: rgba(232,224,212,0.03);
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .stat-icon {
+    font-size: 1rem;
+    margin-bottom: 0.3rem;
+    opacity: 0.7;
+  }
+
+  .stat-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--stone);
+  }
+
+  .stat-label {
+    font-size: 0.6rem;
+    opacity: 0.4;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 0.1rem;
+  }
+
+  .card-footer {
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-tags {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    padding: 0.2rem 0.5rem;
+    background: rgba(232,224,212,0.06);
+    border-radius: 2px;
+    letter-spacing: 0.05em;
+    opacity: 0.6;
+  }
+
+  .fav-btn {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    opacity: 0.3;
+    transition: all 0.15s;
+    padding: 0.2rem;
+  }
+
+  .fav-btn:hover, .fav-btn.active { opacity: 1; }
+  .fav-btn.active { filter: drop-shadow(0 0 4px rgba(196,98,45,0.8)); }
+
+  /* Detail Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(20,16,12,0.85);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--granite);
+    border: 1px solid rgba(232,224,212,0.15);
+    border-radius: 8px;
+    max-width: 640px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: modalIn 0.3s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal-hero {
+    padding: 2.5rem 2rem 1.5rem;
+    background: rgba(0,0,0,0.25);
+    position: relative;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    background: none;
+    border: none;
+    color: var(--stone);
+    font-size: 1.4rem;
+    cursor: pointer;
+    opacity: 0.4;
+    transition: opacity 0.15s;
+  }
+
+  .modal-close:hover { opacity: 1; }
+
+  .modal-region {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--rust);
+  }
+
+  .modal-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem;
+    letter-spacing: 0.04em;
+    color: var(--chalk);
+    line-height: 1;
+    margin-top: 0.3rem;
+  }
+
+  .modal-body {
+    padding: 1.5rem 2rem 2rem;
+  }
+
+  .modal-desc {
+    font-size: 0.85rem;
+    line-height: 1.7;
+    opacity: 0.65;
+    margin-bottom: 1.5rem;
+  }
+
+  .modal-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .modal-stat {
+    background: rgba(232,224,212,0.05);
+    border: 1px solid rgba(232,224,212,0.1);
+    border-radius: 4px;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .modal-stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    color: var(--rust);
+    line-height: 1;
+  }
+
+  .modal-stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    opacity: 0.45;
+    margin-top: 0.3rem;
+  }
+
+  .modal-info-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(232,224,212,0.06);
+    font-size: 0.82rem;
+  }
+
+  .info-row-label { opacity: 0.45; }
+  .info-row-value { font-family: 'DM Mono', monospace; font-size: 0.78rem; }
+
+  /* Season bar */
+  .season-bar {
+    padding: 0.75rem 1.25rem 0.9rem;
+    border-top: 1px solid rgba(232,224,212,0.08);
+  }
+
+  .season-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.4;
+    margin-bottom: 0.45rem;
+  }
+
+  .season-months {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 2px;
+  }
+
+  .month-cell {
+    height: 6px;
+    border-radius: 1px;
+    background: rgba(232,224,212,0.08);
+    position: relative;
+  }
+
+  .month-cell.active { background: var(--moss); }
+  .month-cell.peak { background: var(--rust); }
+
+  .month-cell[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--iron);
+    color: var(--chalk);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    padding: 0.2rem 0.4rem;
+    border-radius: 2px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  /* Modal season */
+  .modal-season {
+    margin-top: 1.25rem;
+  }
+
+  .modal-season-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    opacity: 0.45;
+    margin-bottom: 0.6rem;
+  }
+
+  .modal-season-months {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 3px;
+  }
+
+  .modal-month-cell {
+    height: 28px;
+    border-radius: 3px;
+    background: rgba(232,224,212,0.06);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.55rem;
+    opacity: 0.3;
+    letter-spacing: 0;
+  }
+
+  .modal-month-cell.active { background: rgba(92,122,78,0.35); color: var(--moss); opacity: 1; }
+  .modal-month-cell.peak { background: rgba(196,98,45,0.35); color: var(--rust); opacity: 1; }
+
+  .season-legend {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    opacity: 0.5;
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 1px;
+  }
+
+  .no-results {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 5rem 2rem;
+    opacity: 0.3;
+  }
+
+  .no-results-icon { font-size: 3rem; margin-bottom: 1rem; }
+  .no-results-text { font-family: 'DM Mono', monospace; font-size: 0.8rem; letter-spacing: 0.1em; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">Grimper</div>
+    <div class="logo-sub">Rock Climbing — France</div>
+  </div>
+  <div class="header-right">47 CRAGS INDEXED</div>
+</header>
+
+<div class="main-layout">
+
+  <!-- FILTERS -->
+  <aside class="filters-panel">
+
+    <div>
+      <div class="filter-section-title">City / Region</div>
+      <div class="city-search">
+        <input type="text" id="cityInput" placeholder="Search city or region..." oninput="filterCityTags(this.value)">
+      </div>
+      <div class="city-tags" id="cityTags">
+        <div class="city-tag active" data-city="all" onclick="toggleCity(this)">All France</div>
+        <div class="city-tag" data-city="fontainebleau" onclick="toggleCity(this)">Fontainebleau</div>
+        <div class="city-tag" data-city="chamonix" onclick="toggleCity(this)">Chamonix</div>
+        <div class="city-tag" data-city="verdon" onclick="toggleCity(this)">Verdon</div>
+        <div class="city-tag" data-city="ceuse" onclick="toggleCity(this)">Céüse</div>
+        <div class="city-tag" data-city="buoux" onclick="toggleCity(this)">Buoux</div>
+        <div class="city-tag" data-city="montpellier" onclick="toggleCity(this)">Montpellier</div>
+        <div class="city-tag" data-city="grenoble" onclick="toggleCity(this)">Grenoble</div>
+        <div class="city-tag" data-city="nice" onclick="toggleCity(this)">Nice</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="filter-section-title">Proximity to City</div>
+      <div class="range-group">
+        <div class="range-item">
+          <label>Max distance from city <span id="cityDistVal">50 km</span></label>
+          <input type="range" id="cityDist" min="5" max="200" value="50" oninput="document.getElementById('cityDistVal').textContent = this.value + ' km'; applyFilters()">
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="filter-section-title">Approach</div>
+      <div class="range-group">
+        <div class="range-item">
+          <label>Walk from car park <span id="approachVal">45 min</span></label>
+          <input type="range" id="approach" min="0" max="180" value="45" oninput="document.getElementById('approachVal').textContent = this.value + ' min'; applyFilters()">
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="filter-section-title">Bolt Distance</div>
+      <div class="range-group">
+        <div class="range-item">
+          <label>Max bolt spacing <span id="boltVal">3 m</span></label>
+          <input type="range" id="bolt" min="1" max="8" value="3" step="0.5" oninput="document.getElementById('boltVal').textContent = this.value + ' m'; applyFilters()">
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="filter-section-title">Grade Range</div>
+      <div class="grade-grid" id="gradeGrid">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+    <div>
+      <div class="filter-section-title">Features</div>
+      <div class="toggle-group" id="toggleGroup">
+        <div class="toggle-item" data-filter="southFacing" onclick="toggleFeature(this)">
+          <span class="toggle-label">☀️  South-facing (sun)</span>
+          <div class="toggle-switch"></div>
+        </div>
+        <div class="toggle-item" data-filter="shade" onclick="toggleFeature(this)">
+          <span class="toggle-label">🌲  Shaded / north face</span>
+          <div class="toggle-switch"></div>
+        </div>
+        <div class="toggle-item" data-filter="overhanging" onclick="toggleFeature(this)">
+          <span class="toggle-label">🪨  Overhanging / cave</span>
+          <div class="toggle-switch"></div>
+        </div>
+        <div class="toggle-item" data-filter="slab" onclick="toggleFeature(this)">
+          <span class="toggle-label">📐  Slab routes</span>
+          <div class="toggle-switch"></div>
+        </div>
+        <div class="toggle-item" data-filter="multiPitch" onclick="toggleFeature(this)">
+          <span class="toggle-label">🧗  Multi-pitch available</span>
+          <div class="toggle-switch"></div>
+        </div>
+        <div class="toggle-item" data-filter="camping" onclick="toggleFeature(this)">
+          <span class="toggle-label">⛺  Camping nearby</span>
+          <div class="toggle-switch"></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="apply-btn" onclick="resetFilters()">Reset Filters</button>
+  </aside>
+
+  <!-- RESULTS -->
+  <main class="results-panel">
+    <div class="results-header">
+      <div class="results-count" id="resultsCount">Loading areas...</div>
+      <select class="sort-select" onchange="sortResults(this.value)">
+        <option value="name">Sort: Name A–Z</option>
+        <option value="grade">Sort: Grade (easy first)</option>
+        <option value="approach">Sort: Approach (shortest)</option>
+        <option value="cityDist">Sort: Nearest city</option>
+      </select>
+    </div>
+    <div class="cards-grid" id="cardsGrid"></div>
+  </main>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" onclick="closeModalOnBg(event)">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+const CRAGS = [
+  // season: active months [], peak months [] (1=Jan, 12=Dec)
+  {
+    id:1, name:"Fontainebleau", region:"Île-de-France", city:"fontainebleau",
+    cityDist:60, approach:5, bolt:null, bouldering:true,
+    gradeMin:"4a", gradeMax:"8c", rockType:"Sandstone",
+    routes:3500, height:"5–15m",
+    desc:"The world capital of bouldering. Ancient sandstone boulders scattered through a magical forest — a rite of passage for every climber.",
+    tags:["Bouldering","Forest","Historic"],
+    features:{southFacing:false,shade:true,overhanging:true,slab:true,multiPitch:false,camping:true},
+    lat:48.41, lon:2.68, boltAvg:null,
+    season:{ active:[1,2,3,4,5,9,10,11,12], peak:[3,4,10,11], note:"Best in spring & autumn. Summer too hot & humid; winter possible on dry days." }
+  },
+  {
+    id:2, name:"Gorge du Verdon", region:"Provence-Alpes", city:"nice",
+    cityDist:90, approach:40, bolt:2.5,
+    gradeMin:"5a", gradeMax:"8b", rockType:"Limestone",
+    routes:1500, height:"100–300m",
+    desc:"Europe's Grand Canyon. Towering white limestone walls above an impossibly turquoise river. Verdon rewards the committed with unforgettable multi-pitch lines.",
+    tags:["Multi-pitch","Alpine","Stunning views"],
+    features:{southFacing:true,shade:false,overhanging:false,slab:false,multiPitch:true,camping:true},
+    lat:43.77, lon:6.35, boltAvg:2.5,
+    season:{ active:[3,4,5,6,9,10,11], peak:[4,5,9,10], note:"Spring and autumn are ideal. July–Aug very hot on sun-baked walls. Avoid winter." }
+  },
+  {
+    id:3, name:"Céüse", region:"Hautes-Alpes", city:"grenoble",
+    cityDist:100, approach:75, bolt:2.0,
+    gradeMin:"6a", gradeMax:"9a", rockType:"Limestone",
+    routes:250, height:"20–40m",
+    desc:"Arguably the world's finest sport climbing crag. A massive overhanging grey wall with a legendary route density at every grade above 6a.",
+    tags:["World-class","Overhanging","Stalactites"],
+    features:{southFacing:false,shade:true,overhanging:true,slab:false,multiPitch:false,camping:true},
+    lat:44.47, lon:5.92, boltAvg:2.0,
+    season:{ active:[5,6,7,8,9], peak:[6,7,8,9], note:"High-altitude crag (1600m). Season runs June–September only; snow closes access in winter." }
+  },
+  {
+    id:4, name:"Buoux", region:"Luberon", city:"montpellier",
+    cityDist:110, approach:25, bolt:2.5,
+    gradeMin:"5b", gradeMax:"8c", rockType:"Limestone",
+    routes:300, height:"15–40m",
+    desc:"A mythical crag that shaped modern sport climbing in the 1980s. Hidden in a Provençal valley, the walls here have a raw, ancient character.",
+    tags:["Classic","Historical","Sport"],
+    features:{southFacing:true,shade:false,overhanging:true,slab:false,multiPitch:false,camping:false},
+    lat:43.79, lon:5.42, boltAvg:2.5,
+    season:{ active:[2,3,4,5,9,10,11,12], peak:[3,4,10,11], note:"Excellent spring & autumn. South-facing walls can be climbable year-round on sunny winter days." }
+  },
+  {
+    id:5, name:"Presles", region:"Vercors", city:"grenoble",
+    cityDist:55, approach:20, bolt:2.0,
+    gradeMin:"5a", gradeMax:"8a", rockType:"Limestone",
+    routes:400, height:"20–60m",
+    desc:"A vast limestone amphitheatre in the Vercors plateau. Excellent variety for all levels, with long sustained routes and superb mountain scenery.",
+    tags:["All levels","Scenic","Limestone"],
+    features:{southFacing:true,shade:true,overhanging:false,slab:true,multiPitch:true,camping:true},
+    lat:45.0, lon:5.5, boltAvg:2.0,
+    season:{ active:[4,5,6,7,8,9,10], peak:[5,6,9], note:"Best May–Oct. Can be cold and wet in early spring. Some walls climbable in good winter spells." }
+  },
+  {
+    id:6, name:"Claret", region:"Hérault", city:"montpellier",
+    cityDist:25, approach:10, bolt:3.0,
+    gradeMin:"4c", gradeMax:"7c", rockType:"Limestone",
+    routes:180, height:"10–25m",
+    desc:"A sunny local crag just outside Montpellier. Compact limestone walls with a friendly atmosphere — perfect for quick after-work sessions.",
+    tags:["Local gem","Accessible","Sunny"],
+    features:{southFacing:true,shade:false,overhanging:false,slab:true,multiPitch:false,camping:false},
+    lat:43.72, lon:3.88, boltAvg:3.0,
+    season:{ active:[1,2,3,4,5,9,10,11,12], peak:[2,3,4,10,11], note:"Near year-round. Summer too hot; the rest of the year is excellent thanks to the Mediterranean climate." }
+  },
+  {
+    id:7, name:"Les Calanques", region:"Provence", city:"nice",
+    cityDist:40, approach:50, bolt:3.5,
+    gradeMin:"4a", gradeMax:"7b", rockType:"Limestone",
+    routes:800, height:"10–80m",
+    desc:"Sea cliffs plunging into Mediterranean blue. Approach on foot through scrubland; reward is climbing above turquoise coves.",
+    tags:["Sea cliffs","Scenic","Summer"],
+    features:{southFacing:true,shade:false,overhanging:false,slab:true,multiPitch:true,camping:false},
+    lat:43.21, lon:5.44, boltAvg:3.5,
+    season:{ active:[1,2,3,4,5,10,11,12], peak:[3,4,5,11], note:"Closed June–Sept due to fire risk. Best in spring and mild winter months." }
+  },
+  {
+    id:8, name:"Ailefroide", region:"Écrins", city:"grenoble",
+    cityDist:85, approach:60, bolt:3.0,
+    gradeMin:"5c", gradeMax:"8a", rockType:"Granite",
+    routes:350, height:"20–200m",
+    desc:"Granite peaks in the heart of the Écrins National Park. Serious alpine climbing with committing routes and wild mountain atmosphere.",
+    tags:["Alpine","Granite","Serious"],
+    features:{southFacing:false,shade:true,overhanging:false,slab:false,multiPitch:true,camping:true},
+    lat:44.86, lon:6.42, boltAvg:3.0,
+    season:{ active:[6,7,8,9], peak:[7,8], note:"Short high-alpine season: July and August are prime. Snow possible as late as June and as early as October." }
+  },
+  {
+    id:9, name:"Saint-Guilhem-le-Désert", region:"Hérault", city:"montpellier",
+    cityDist:40, approach:15, bolt:2.5,
+    gradeMin:"5a", gradeMax:"8a", rockType:"Limestone",
+    routes:220, height:"15–35m",
+    desc:"A medieval village nestled in a limestone gorge. Excellent sport climbing with routes from beginner to elite on compact, featured rock.",
+    tags:["Village","Sport","Medieval"],
+    features:{southFacing:true,shade:true,overhanging:true,slab:false,multiPitch:false,camping:true},
+    lat:43.73, lon:3.55, boltAvg:2.5,
+    season:{ active:[1,2,3,4,5,9,10,11,12], peak:[3,4,10,11], note:"Great almost year-round. Summer gets hot but shaded sectors remain climbable in mornings." }
+  },
+  {
+    id:10, name:"Abeilhan", region:"Hérault", city:"montpellier",
+    cityDist:60, approach:5, bolt:2.0,
+    gradeMin:"6a", gradeMax:"9a+", rockType:"Limestone",
+    routes:80, height:"10–25m",
+    desc:"A compact powerhouse crag with some of the hardest limestone routes in France. Cave and severely overhanging walls attract elite climbers worldwide.",
+    tags:["Elite","Cave","Powerful"],
+    features:{southFacing:false,shade:true,overhanging:true,slab:false,multiPitch:false,camping:false},
+    lat:43.47, lon:3.31, boltAvg:2.0,
+    season:{ active:[1,2,3,4,5,6,9,10,11,12], peak:[1,2,3,11,12], note:"Cave keeps it dry year-round. Excellent winter destination; summer heat manageable thanks to shade." }
+  },
+  {
+    id:11, name:"Orpierre", region:"Hautes-Alpes", city:"grenoble",
+    cityDist:120, approach:15, bolt:2.5,
+    gradeMin:"4a", gradeMax:"8a", rockType:"Limestone",
+    routes:350, height:"15–50m",
+    desc:"A charming Provençal village with a massive crag right behind it. Excellent for families and all-levels groups with a wide grade spread.",
+    tags:["Family-friendly","Village","All grades"],
+    features:{southFacing:true,shade:true,overhanging:false,slab:true,multiPitch:false,camping:true},
+    lat:44.31, lon:5.69, boltAvg:2.5,
+    season:{ active:[3,4,5,6,9,10,11], peak:[4,5,9,10], note:"Classic spring and autumn crag. Some walls climb well in winter; July–Aug can be very hot." }
+  },
+  {
+    id:12, name:"Boux (Lot)", region:"Lot", city:"montpellier",
+    cityDist:180, approach:20, bolt:2.0,
+    gradeMin:"5a", gradeMax:"8b", rockType:"Limestone",
+    routes:500, height:"20–50m",
+    desc:"The Lot valley is a paradise of golden limestone. Long routes on perfect rock with a relaxed campsite atmosphere below the walls.",
+    tags:["Road trip","Golden rock","Long routes"],
+    features:{southFacing:true,shade:false,overhanging:true,slab:false,multiPitch:false,camping:true},
+    lat:44.53, lon:1.82, boltAvg:2.0,
+    season:{ active:[4,5,6,9,10], peak:[5,6,9,10], note:"Ideal in late spring and autumn. Summer evenings are pleasant. Valley can be cold and damp in winter." }
+  }
+];
+
+const MONTHS = ["J","F","M","A","M","J","J","A","S","O","N","D"];
+const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+function seasonBarHTML(season) {
+  return `<div class="season-bar">
+    <div class="season-label">Active Season</div>
+    <div class="season-months">${MONTHS.map((m,i) => {
+      const mo = i+1;
+      const isPeak = season.peak.includes(mo);
+      const isActive = season.active.includes(mo);
+      const cls = isPeak ? 'month-cell peak' : isActive ? 'month-cell active' : 'month-cell';
+      return `<div class="${cls}" title="${MONTH_NAMES[i]}"></div>`;
+    }).join('')}</div>
+  </div>`;
+}
+
+function modalSeasonHTML(season) {
+  return `<div class="modal-season">
+    <div class="modal-season-title">Active Season</div>
+    <div class="modal-season-months">${MONTHS.map((m,i) => {
+      const mo = i+1;
+      const isPeak = season.peak.includes(mo);
+      const isActive = season.active.includes(mo);
+      const cls = isPeak ? 'modal-month-cell peak' : isActive ? 'modal-month-cell active' : 'modal-month-cell';
+      return `<div class="${cls}">${m}</div>`;
+    }).join('')}</div>
+    <div class="season-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--rust)"></div>Peak</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--moss)"></div>Good</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(232,224,212,0.1)"></div>Avoid</div>
+    </div>
+    <div style="font-size:0.75rem;opacity:0.45;margin-top:0.75rem;line-height:1.5;">${season.note}</div>
+  </div>`;
+}
+
+const GRADES = ["4a","4b","4c","5a","5b","5c","6a","6b","6c","7a","7b","7c","8a","8b","8c","9a"];
+const GRADE_IDX = {};
+GRADES.forEach((g,i) => GRADE_IDX[g] = i);
+
+let activeCity = "all";
+let activeGrades = new Set(GRADES);
+let activeFeatures = new Set();
+let favs = new Set();
+let currentSort = "name";
+let filteredCrags = [...CRAGS];
+
+// Build grade grid
+function buildGradeGrid() {
+  const grid = document.getElementById('gradeGrid');
+  GRADES.forEach(g => {
+    const btn = document.createElement('div');
+    btn.className = 'grade-btn active';
+    btn.textContent = g;
+    btn.dataset.grade = g;
+    btn.onclick = () => toggleGrade(btn, g);
+    grid.appendChild(btn);
+  });
+}
+
+function toggleGrade(btn, grade) {
+  if (activeGrades.has(grade)) {
+    activeGrades.delete(grade);
+    btn.classList.remove('active');
+  } else {
+    activeGrades.add(grade);
+    btn.classList.add('active');
+  }
+  applyFilters();
+}
+
+function toggleCity(el) {
+  document.querySelectorAll('.city-tag').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  activeCity = el.dataset.city;
+  applyFilters();
+}
+
+function toggleFeature(el) {
+  const f = el.dataset.filter;
+  el.classList.toggle('active');
+  if (activeFeatures.has(f)) activeFeatures.delete(f);
+  else activeFeatures.add(f);
+  applyFilters();
+}
+
+function filterCityTags(val) {
+  document.querySelectorAll('.city-tag').forEach(t => {
+    if (t.dataset.city === 'all') return;
+    t.style.display = t.dataset.city.includes(val.toLowerCase()) || t.textContent.toLowerCase().includes(val.toLowerCase()) ? '' : 'none';
+  });
+}
+
+function applyFilters() {
+  const cityDist = parseInt(document.getElementById('cityDist').value);
+  const approach = parseInt(document.getElementById('approach').value);
+  const bolt = parseFloat(document.getElementById('bolt').value);
+
+  filteredCrags = CRAGS.filter(c => {
+    if (activeCity !== "all" && c.city !== activeCity) return false;
+    if (c.cityDist > cityDist) return false;
+    if (c.approach > approach) return false;
+    if (c.bolt !== null && c.bolt > bolt) return false;
+    // grade overlap
+    const cMinIdx = GRADE_IDX[c.gradeMin] ?? 0;
+    const cMaxIdx = GRADE_IDX[c.gradeMax] ?? GRADES.length-1;
+    const hasGrade = [...activeGrades].some(g => {
+      const gi = GRADE_IDX[g];
+      return gi >= cMinIdx && gi <= cMaxIdx;
+    });
+    if (!hasGrade) return false;
+    // features
+    for (const f of activeFeatures) {
+      if (!c.features[f]) return false;
+    }
+    return true;
+  });
+
+  sortAndRender();
+}
+
+function sortResults(val) {
+  currentSort = val;
+  sortAndRender();
+}
+
+function sortAndRender() {
+  const sorted = [...filteredCrags].sort((a,b) => {
+    if (currentSort === 'name') return a.name.localeCompare(b.name);
+    if (currentSort === 'grade') return GRADE_IDX[a.gradeMin] - GRADE_IDX[b.gradeMin];
+    if (currentSort === 'approach') return a.approach - b.approach;
+    if (currentSort === 'cityDist') return a.cityDist - b.cityDist;
+    return 0;
+  });
+  renderCards(sorted);
+}
+
+function gradeClass(g) {
+  const i = GRADE_IDX[g] ?? 0;
+  if (i < 6) return 'grade-easy';
+  if (i < 11) return 'grade-moderate';
+  return 'grade-hard';
+}
+
+function renderCards(crags) {
+  const grid = document.getElementById('cardsGrid');
+  document.getElementById('resultsCount').textContent = `${crags.length} areas found`;
+  grid.innerHTML = '';
+
+  if (crags.length === 0) {
+    grid.innerHTML = `<div class="no-results"><div class="no-results-icon">🪨</div><div class="no-results-text">No crags match your filters.<br>Try relaxing some criteria.</div></div>`;
+    return;
+  }
+
+  crags.forEach((c, i) => {
+    const card = document.createElement('div');
+    card.className = 'climbing-card';
+    card.style.animationDelay = `${i * 0.05}s`;
+
+    const boltStr = c.bolt ? `${c.bolt}m` : '—';
+    const isFav = favs.has(c.id);
+    const tagHtml = c.tags.map(t => `<span class="tag">${t}</span>`).join('');
+
+    card.innerHTML = `
+      <div class="card-header">
+        <div>
+          <div class="card-region">${c.region}</div>
+          <div class="card-name">${c.name}</div>
+        </div>
+        <div class="card-grade-badge ${gradeClass(c.gradeMin)}">${c.gradeMin}–${c.gradeMax.replace('9a+','9a+')}</div>
+      </div>
+      <div class="card-rock-type">${c.rockType} · ${c.routes} routes</div>
+      <div class="card-stats">
+        <div class="stat">
+          <div class="stat-icon">🚗</div>
+          <div class="stat-value">${c.cityDist}km</div>
+          <div class="stat-label">from city</div>
+        </div>
+        <div class="stat">
+          <div class="stat-icon">🥾</div>
+          <div class="stat-value">${c.approach}min</div>
+          <div class="stat-label">approach</div>
+        </div>
+        <div class="stat">
+          <div class="stat-icon">🔩</div>
+          <div class="stat-value">${boltStr}</div>
+          <div class="stat-label">bolt spacing</div>
+        </div>
+      </div>
+      ${seasonBarHTML(c.season)}
+      <div class="card-footer">
+        <div class="card-tags">${tagHtml}</div>
+        <button class="fav-btn ${isFav ? 'active':''}" onclick="event.stopPropagation(); toggleFav(${c.id}, this)" title="Save">🩶</button>
+      </div>
+    `;
+
+    card.onclick = () => openModal(c);
+    grid.appendChild(card);
+  });
+}
+
+function toggleFav(id, btn) {
+  if (favs.has(id)) { favs.delete(id); btn.classList.remove('active'); btn.textContent = '🩶'; }
+  else { favs.add(id); btn.classList.add('active'); btn.textContent = '🧡'; }
+}
+
+function openModal(c) {
+  const boltStr = c.bolt ? `${c.bolt} m avg spacing` : 'Bouldering — no bolts';
+  const featureList = Object.entries(c.features).filter(([,v]) => v).map(([k]) => {
+    const labels = {southFacing:'☀️ South-facing',shade:'🌲 Shaded',overhanging:'🪨 Overhanging',slab:'📐 Slab',multiPitch:'🧗 Multi-pitch',camping:'⛺ Camping'};
+    return `<span class="tag" style="opacity:1">${labels[k]||k}</span>`;
+  }).join('');
+
+  document.getElementById('modalContent').innerHTML = `
+    <div class="modal-hero">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div class="modal-region">${c.region} · ${c.rockType}</div>
+      <div class="modal-name">${c.name}</div>
+    </div>
+    <div class="modal-body">
+      <p class="modal-desc">${c.desc}</p>
+      <div class="modal-stats-grid">
+        <div class="modal-stat">
+          <div class="modal-stat-value">${c.routes}</div>
+          <div class="modal-stat-label">Routes</div>
+        </div>
+        <div class="modal-stat">
+          <div class="modal-stat-value">${c.approach}</div>
+          <div class="modal-stat-label">Min approach</div>
+        </div>
+        <div class="modal-stat">
+          <div class="modal-stat-value">${c.cityDist}</div>
+          <div class="modal-stat-label">km from city</div>
+        </div>
+      </div>
+      <div class="modal-info-rows">
+        <div class="info-row"><span class="info-row-label">Grade range</span><span class="info-row-value">${c.gradeMin} — ${c.gradeMax}</span></div>
+        <div class="info-row"><span class="info-row-label">Wall height</span><span class="info-row-value">${c.height}</span></div>
+        <div class="info-row"><span class="info-row-label">Bolt spacing</span><span class="info-row-value">${boltStr}</span></div>
+        <div class="info-row"><span class="info-row-label">Features</span><span style="display:flex;gap:.3rem;flex-wrap:wrap">${featureList||'—'}</span></div>
+      </div>
+      ${modalSeasonHTML(c.season)}
+    </div>
+  `;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function closeModalOnBg(e) { if (e.target === document.getElementById('modal')) closeModal(); }
+
+function resetFilters() {
+  activeCity = "all";
+  activeFeatures = new Set();
+  activeGrades = new Set(GRADES);
+  document.getElementById('cityDist').value = 50;
+  document.getElementById('cityDistVal').textContent = '50 km';
+  document.getElementById('approach').value = 45;
+  document.getElementById('approachVal').textContent = '45 min';
+  document.getElementById('bolt').value = 3;
+  document.getElementById('boltVal').textContent = '3 m';
+  document.querySelectorAll('.city-tag').forEach(t => t.classList.toggle('active', t.dataset.city==='all'));
+  document.querySelectorAll('.grade-btn').forEach(b => b.classList.add('active'));
+  document.querySelectorAll('.toggle-item').forEach(t => t.classList.remove('active'));
+  document.getElementById('cityInput').value = '';
+  document.querySelectorAll('.city-tag').forEach(t => t.style.display = '');
+  applyFilters();
+}
+
+// Init
+buildGradeGrid();
+applyFilters();
+</script>
+</body>
+</html>
